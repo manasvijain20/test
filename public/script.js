@@ -10,42 +10,42 @@ const user = prompt("Enter your name");
 
 const myVideo = document.createElement("video")
 myVideo.muted = true
-let myStream 
+let myStream
 navigator.mediaDevices.getUserMedia({
     //using getUserMedia helps us get the audio and the video streaming
-    audio: true, video:true
-}).then((stream)=>{
+    audio: true, video: true
+}).then((stream) => {
     myStream = stream
     addVideoStream(myVideo, stream)
-    socket.on("user-connected", (userId)=>{
+    socket.on("user-connected", (userId) => {
         connectToNewUser(userId, stream)
-    }) 
+    })
 
     //answer the call
-    peer.on("call", (call)=>{
+    peer.on("call", (call) => {
         call.answer(stream)
         const video = document.createElement("video")
-        call.on("stream", (userVideoStream)=>{
+        call.on("stream", (userVideoStream) => {
             addVideoStream(video, userVideoStream)
         })
     })
 })
 
-function connectToNewUser(userId, stream){
+function connectToNewUser(userId, stream) {
     const call = peer.call(userId, stream)
     const video = document.createElement("video")
     //handling the stream event
-    call.on("stream", (userVideoStream)=>{
+    call.on("stream", (userVideoStream) => {
         addVideoStream(video, userVideoStream)
     })
 }
 
-function addVideoStream(video, stream){
+function addVideoStream(video, stream) {
     //video is the element in which we will display the stream
     //stream is the stream that will be displayed
     //srcobject is used to open the video which was muted earlier
-    video.srcObject = stream 
-    video.addEventListener("loadedmetadata", ()=>{
+    video.srcObject = stream
+    video.addEventListener("loadedmetadata", () => {
         //loadedmetadeta is the name of the even listener which checks whether the srcobject is loaded or not
         video.play()
         $("#video_grid").append(video)
@@ -80,14 +80,14 @@ $(function () {
 
     $('#stop_video').click(function () {
         const enabled = myStream.getVideoTracks()[0].enabled
-        if(enabled){
-            myStream.getVideoTracks()[0] = false
+        if (enabled) {
+            myStream.getVideoTracks()[0].enabled = false
             html = `<i class="fas fa-video-slash"></i>`;
             $("#stop_video").toggleClass('background_red')
             $("#stop_video").html(html)
         }
-        else{
-            myStream.getVideoTracks()[0] = true
+        else {
+            myStream.getVideoTracks()[0].enabled = true
             html = `<i class="fas fa-video"></i>`;
             $("#stop_video").toggleClass('background_red')
             $("#stop_video").html(html)
@@ -96,18 +96,39 @@ $(function () {
 
     $('#mute_button').click(function () {
         const enabled = myStream.getAudioTracks()[0].enabled
-        if(enabled){
-            myStream.getAudioTracks()[0] = false
+        if (enabled) {
+            myStream.getAudioTracks()[0].enabled = false
             html = `<i class = "fas fa-microphone-slash"></i>`
             $("#mute_button").toggleClass('background_red')
             $("#mute_button").html(html)
         }
-        else{
-            myStream.getAudioTracks()[0] = true
+        else {
+            myStream.getAudioTracks()[0].enabled = true
             html = `<i class = "fas fa-microphone"></i>`
             $("#mute_button").toggleClass('background_red')
             $("#mute_button").html(html)
         }
+    })
+    $('#invite_button').click(function () {
+        const to = prompt("Enter email address")
+        let data = {
+            url: window.location.href,
+            to: to
+        }
+        $.ajax({
+            url:"/send-mail",
+            type:"post",
+            data: JSON.stringify(data),
+            dataType: 'json',
+            contentType: 'application-json',
+            success: function(result){
+                alert("Invite sent!")
+            },
+            error: function(result){
+                console.log(result.responseJSON)
+            }
+        })
+
     })
 })
 
